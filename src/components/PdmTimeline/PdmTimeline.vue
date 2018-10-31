@@ -1,12 +1,12 @@
 <template>
-	<div :class="['pdm_timeline', `is-${this.position}`]">
+	<div :class="['pdm_tl', `is-${this.position}`]">
 		<template v-for="data in groupedData">
 			<div :key="`${data.group}`"
-			     class="pdm_timeline-group"
+			     class="pdm-tl_group"
 			     :aria-label="formatGroupName(data.group, true)"
 			>
-				<span class="pdm_timeline-group-title">{{formatGroupName(data.group)}}</span>
-				<ul class="pdm_timeline-events"
+				<span class="pdm-tl_group-title">{{formatGroupName(data.group)}}</span>
+				<ul class="pdm-tl_group-events"
 				>
 					<PdmTimelineItem
 							v-for="(item, i) in data.events"
@@ -21,7 +21,7 @@
 					>
 					</PdmTimelineItem>
 				</ul>
-				<div class="pdm_timeline-group-end"></div>
+				<div class="pdm-tl_group-end"></div>
 			</div>
 		</template>
 	</div>
