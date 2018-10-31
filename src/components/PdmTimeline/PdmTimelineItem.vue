@@ -21,14 +21,20 @@
 						</i>
 					</template>
 				</div>
-				<template v-if="showMediaNavigation">
-					<i class="pdm-tl_arrow-prev" @click="onMediaPrev" ref="arrowPrev">
+				<transition name="fade">
+					<i v-show="showMediaNavigationLeft"
+					   class="pdm-tl_arrow-left"
+					   @click="onClickArrowLeft">
 						<img src="../../assets/images/arrow-left.svg"/>
 					</i>
-					<i class="pdm-tl_arrow-next" @click="onMediaNext" ref="arrowNext">
+				</transition>
+				<transition name="fade">
+					<i v-show="showMediaNavigationRight"
+					   class="pdm-tl_arrow-right"
+					   @click="onClickArrowRight">
 						<img src="../../assets/images/arrow-right.svg"/>
 					</i>
-				</template>
+				</transition>
 			</div>
 			<span class="pdm-tl_item-description">{{description}}</span>
 		</div>
@@ -37,13 +43,14 @@
 
 <script>
 	import {DateUtils} from "./utils"
+	import {debounce} from "./utils"
 
 	export default {
 		props: {
 			position: {
 				type: String,
 				validator: (val) => {
-					return ['left', 'right'].indexOf(val) !== -1
+					return ["left", "right"].indexOf(val) !== -1
 				}
 			},
 			date: {
@@ -74,23 +81,26 @@
 				imageTypeRegex: /(png|jpe?g|gif|svg)(\?.*)?$/,
 				videoTypeRegex: /(mp4|webm)(\?.*)?$/,
 				audioTypeRegex: /(ogg|mp3|wav|flac|aac)(\?.*)?$/,
-				showMediaNavigation: false,
+				showMediaNavigationLeft: false,
+				showMediaNavigationRight: false,
+				isShowingFirstItem: 0,
+				isShowingLastItem: 0,
 			}
 		},
 		mounted() {
 			this.handleMediaNavigation()
-			window.addEventListener('resize', this.handleWindowResize)
+			window.addEventListener("resize", debounce(this.handleMediaNavigation, 100))
 		},
-		beforeDestroy(){
-			window.removeEventListener('resize', this.handleWindowResize)
+		beforeDestroy() {
+			window.removeEventListener("resize", this.handleWindowResize)
 		},
 		computed: {
-			sortedMedia(){
-				if (this.position === 'left'){
+			sortedMedia() {
+				if (this.position === "left") {
 					return [...this.media].reverse()
 				}
 				return this.media
-			}
+			},
 		},
 		methods: {
 			formatItemDate(date) {
@@ -108,28 +118,55 @@
 					throw new Error("Unsupported media type: " + ext)
 				}
 			},
-			bindMediaStyle(path){
+			bindMediaStyle(path) {
 				let background = `url(${path})`
 				return {
-					backgroundSize: 'cover'
+					backgroundSize: "cover"
 				}
 			},
-			onMediaNext() {
+			onClickArrowRight() {
 				console.log("click next arrow")
 			},
-			onMediaPrev() {
+			onClickArrowLeft() {
 				console.log("click previous arrow")
 			},
 			handleWindowResize() {
 				this.handleMediaNavigation()
 			},
-			handleMediaNavigation(){
+			handleMediaNavigation() {
 				let mediaContainer = this.$refs.mediaContainer
-				let mediaTotalWidth = [...mediaContainer.children].reduce((total, m)=>{
-					return total + m.clientWidth
-				}, 0)
+				// let mediaTotalWidth = [...mediaContainer.children].reduce((total, m) => {
+				// 	return total + m.clientWidth
+				// }, 0)
 
-				this.showMediaNavigation = mediaContainer.clientWidth < mediaTotalWidth
+				let firstVisibleRect = mediaContainer.firstElementChild.getBoundingClientRect()
+				let lastVisibleRect = mediaContainer.lastElementChild.getBoundingClientRect()
+				let containerRect = mediaContainer.getBoundingClientRect()
+
+				let [start, end] = [containerRect.left, containerRect.right]
+
+				let firstVisibleStart = this.position === "right"
+					? firstVisibleRect.left
+					: firstVisibleRect.right
+
+				let lastVisibleEnd = this.position === "right"
+					? lastVisibleRect.right
+					: lastVisibleRect.left
+
+				this.isShowingFirstItem = start <= firstVisibleStart && firstVisibleStart <= end
+				this.isShowingLastItem = start <= lastVisibleEnd && lastVisibleEnd <= end
+				this.setEachMediaNavigationVisibility(!this.isShowingFirstItem, !this.isShowingLastItem)
+			},
+			setEachMediaNavigationVisibility(showLeft, showRight){
+				if (this.position === "left"){
+					[showLeft, showRight] = [showRight, showLeft]
+				}
+
+				this.showMediaNavigationLeft = showLeft
+				this.showMediaNavigationRight = showRight
+			},
+			updateMediaNavigationVisibility(){
+
 			}
 		}
 	}

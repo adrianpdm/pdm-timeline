@@ -255,7 +255,7 @@ li.pdm-tl_item:last-child .pdm-tl_item-divider {
 }
 
 .pdm-tl_arrow {
-  &-prev, &-next {
+  &-left, &-right {
     display: block;
     position: absolute;
     top: calc(50% - #{$media-arrow-size / 2});
@@ -274,9 +274,8 @@ li.pdm-tl_item:last-child .pdm-tl_item-divider {
     -webkit-box-shadow: 0 .2rem 1rem 0 $subtle-color;
     -moz-box-shadow: 0 .2rem 1rem 0 $subtle-color;
     box-shadow: 0 .2rem 1rem 0 $subtle-color;
-    transition: all .3s ease-in-out;
+    transition: transform .3s ease-in-out;
     transform: translateY(0);
-    opacity: .5;
 
     > img {
       position: relative;
@@ -302,7 +301,6 @@ li.pdm-tl_item:last-child .pdm-tl_item-divider {
 
     &:hover {
       transform: translateY(-.1rem);
-      opacity: 1;
     }
 
     &:hover::before {
@@ -310,17 +308,25 @@ li.pdm-tl_item:last-child .pdm-tl_item-divider {
     }
   }
 
-  &-prev {
+  &-left {
     left: calc(#{$media-arrow-size} * -1 / 2);
     > img {
       left: -.1rem;
     }
   }
 
-  &-next {
+  &-right {
     right: calc(#{$media-arrow-size} * -1 / 2);
     > img {
       right: -.1rem;
     }
   }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .3s ease-in-out;
+}
+
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
