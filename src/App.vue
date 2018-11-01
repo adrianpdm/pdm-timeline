@@ -1,5 +1,6 @@
 <template>
 	<div id="app">
+		<div style="height: 800px; width: 100%;"></div>
 		<pdm-timeline
 				:data="timelineData"
 				group-by="yearMonth"

@@ -14,8 +14,9 @@
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   width: 100%;
+  height: 100%;
   box-sizing: border-box;
-  display: inline-block;
+  display: block;
   padding: 2rem;
 
   * {
@@ -162,15 +163,10 @@ li.pdm-tl_item:last-child .pdm-tl_item-divider {
     margin-top: .25rem;
   }
 
-  &-media-outer {
-    position: relative;
-    margin-top: .5rem;
-  }
-
   &-description {
     font-size: .75rem;
     font-weight: $item-description-font-weight;
     color: $item-description-color;
-    margin-top: .5rem;
+    margin-top: 0rem;
   }
 }

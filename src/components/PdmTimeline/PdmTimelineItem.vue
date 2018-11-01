@@ -9,12 +9,12 @@
 		<div class="pdm-tl_item_container">
 			<span class="pdm-tl_item-title">{{title}}</span>
 			<span class="pdm-tl_item-subtitle">{{subtitle}}</span>
-			<div v-if="media.length" class="pdm-tl_item-media-outer">
+			<template v-if="media.length">
 				<pdm-media-slider
 					:data="media"
 					:direction="position === 'left' ? 'rtl' : 'ltr'">
 				</pdm-media-slider>
-			</div>
+			</template>
 			<span class="pdm-tl_item-description">{{description}}</span>
 		</div>
 	</li>

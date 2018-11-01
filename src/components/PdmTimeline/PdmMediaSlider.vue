@@ -1,6 +1,6 @@
 <template>
-	<div class="pdm-media-slider">
-		<div class="pdm-media-slider-inner" :data-direction="direction" ref="mediaContainer">
+	<div class="pdm-media-slider" ref="mediaContainer">
+		<div class="pdm-media-slider-inner" :data-direction="direction">
 			<template v-for="(path, i) in sortedMedia">
 				<i :key="`media-${i}`"
 				   class="pdm-media-slider-item"
@@ -11,17 +11,19 @@
 			</template>
 		</div>
 		<transition name="fade">
-			<i v-if="showMediaNavigationLeft"
-			   key="nav-left"
+			<i v-if="showNavStart"
 			   class="pdm-media-slider-nav_left"
 			   @click="onClickArrowLeft">
-				<img src="../../assets/images/arrow-left.svg"/>
+				<img class="pdm-media-slider-nav-icon"
+				     src="../../assets/images/arrow-left.svg"/>
 			</i>
-			<i v-if="showMediaNavigationRight"
-			   key="nav-right"
+		</transition>
+		<transition name="fade">
+			<i v-if="showNavEnd"
 			   class="pdm-media-slider-nav_right"
 			   @click="onClickArrowRight">
-				<img src="../../assets/images/arrow-right.svg"/>
+				<img class="pdm-media-slider-nav-icon"
+				     src="../../assets/images/arrow-right.svg"/>
 			</i>
 		</transition>
 	</div>
@@ -58,16 +60,24 @@
 				imageTypeRegex: /(png|jpe?g|gif|svg)(\?.*)?$/,
 				videoTypeRegex: /(mp4|webm)(\?.*)?$/,
 				audioTypeRegex: /(ogg|mp3|wav|flac|aac)(\?.*)?$/,
-				showMediaNavigationLeft: false,
-				showMediaNavigationRight: false,
+				showNavStart: false,
+				showNavEnd: false,
+				firstVisibleItemIndex: 0,
+				lastVisibleItemIndex: 0,
 			}
 		},
 		mounted(){
-			this.handleMediaNavigation()
-			window.addEventListener('resize', debounce(this.handleMediaNavigation, 150))
+			this.populateItems()
+				.then(()=>{
+					this.updateNavVisibility()
+					window.addEventListener('resize', debounce(this.handleSliderResize, 100))
+				})
+				.catch(()=>{
+
+				})
 		},
 		beforeDestroy(){
-			window.removeEventListener('resize', this.handleMediaNavigation)
+			window.removeEventListener('resize', this.handleSliderResize)
 		},
 		computed: {
 			sortedMedia() {
@@ -76,8 +86,14 @@
 				}
 				return this.data
 			},
+			mediaContainer(){
+				return this.$refs.mediaContainer.getElementsByClassName('pdm-media-slider-inner')[0]
+			}
 		},
 		methods: {
+			async populateItems(){
+
+			},
 			checkFileType(filePath) {
 				let ext = this.fileExtensionRegex.exec(filePath)[1]
 				if (this.imageTypeRegex.test(ext)) {
@@ -102,35 +118,63 @@
 			onClickArrowLeft() {
 				console.log("click previous arrow")
 			},
-			handleMediaNavigation() {
-				let mediaContainer = this.$refs.mediaContainer
-
-				let firstVisibleRect = mediaContainer.firstElementChild.getBoundingClientRect()
-				let lastVisibleRect = mediaContainer.lastElementChild.getBoundingClientRect()
-				let containerRect = mediaContainer.getBoundingClientRect()
-
-				let [start, end] = [containerRect.left, containerRect.right]
-
-				let firstVisibleStart = this.direction === "ltr"
-					? firstVisibleRect.left
-					: firstVisibleRect.right
-
-				let lastVisibleEnd = this.direction === "ltr"
-					? lastVisibleRect.right
-					: lastVisibleRect.left
-
-				let isShowingFirstItem = start <= firstVisibleStart && firstVisibleStart <= end
-				let isShowingLastItem = start <= lastVisibleEnd && lastVisibleEnd <= end
-				this.setEachMediaNavigationVisibility(!isShowingFirstItem, !isShowingLastItem)
+			handleSliderResize() {
+				this.updateNavVisibility()
 			},
-			setEachMediaNavigationVisibility(showLeft, showRight) {
+			updateNavVisibility() {
+				let showStart = this.findFirstVisibleElement().index > 0
+				let showEnd = this.findLastVisibleElement().index < ( this.data.length - 1 )
+
 				if (this.direction === "rtl") {
-					[showLeft, showRight] = [showRight, showLeft]
+					[showStart, showEnd] = [showEnd, showStart]
 				}
 
-				this.showMediaNavigationLeft = showLeft
-				this.showMediaNavigationRight = showRight
+				this.showNavStart = showStart
+				this.showNavEnd = showEnd
 			},
+			findFirstVisibleElement(partial = false){
+				return this.findVisibleElement("first", partial)
+			},
+			findLastVisibleElement(partial = false){
+				return this.findVisibleElement("last", partial)
+			},
+			findVisibleElement(position, partial = false){
+				let [boundStart, boundEnd] = [
+					this.mediaContainer.getBoundingClientRect().left,
+					this.mediaContainer.getBoundingClientRect().right
+				]
+
+				let children = this.mediaContainer.childNodes
+
+				let element, elementIndex
+				let [index, stop, dir] = position === "first" ? [0, children.length, 1] : [children.length - 1, -1, -1]
+				for (index; index !== stop; index += dir){
+					let child = children[index]
+					let [childStart, childEnd] = [
+						child.getBoundingClientRect().left,
+						child.getBoundingClientRect().right
+					]
+
+					if (this.isElementWithinBound([childStart, childEnd], [boundStart, boundEnd], partial)){
+						element = child
+						elementIndex = index
+						break
+					}
+				}
+
+				return {
+					item: element,
+					index: elementIndex
+				}
+			},
+			isElementWithinBound([elementStart, elementEnd], [boundStart, boundEnd], partial = false){
+				let isStartWithin = boundStart <= elementStart && elementStart <= boundEnd
+				let isEndWithin = boundStart <= elementEnd && elementEnd <= boundEnd
+				if (partial){
+					return isStartWithin || isEndWithin
+				}
+				return isStartWithin && isEndWithin
+			}
 		}
 	}
 </script>

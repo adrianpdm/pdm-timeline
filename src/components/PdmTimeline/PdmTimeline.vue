@@ -1,5 +1,5 @@
 <template>
-	<div :class="['pdm_tl', `is-${this.position}`]">
+	<div :class="['pdm_tl', `is-${this.position}`]" ref="pdmTimeline">
 		<template v-for="data in groupedData">
 			<div class="pdm-tl_group"
 			     :key="`${data.group}`"
@@ -59,7 +59,18 @@
 			}
 		},
 		data() {
-			return {}
+			return {
+				dataToDisplay: []
+			}
+		},
+		beforeMount(){
+
+		},
+		mounted(){
+
+		},
+		beforeDestroy(){
+
 		},
 		computed: {
 			sortedData() {

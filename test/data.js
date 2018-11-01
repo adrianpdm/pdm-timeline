@@ -44,7 +44,7 @@ let data = (function() {
 		let subtitle = randomArrayElement(opts.subtitle)
 		let description = randomArrayElement(opts.description)
 		let mediaLayout = randomArrayElement(opts.mediaLayout)
-		let media = [].concat(randomArrayElement(opts.media, Math.ceil(Math.random() * 6)))
+		let media = [].concat(randomArrayElement(opts.media, Math.ceil(Math.random() * 12)))
 		let date = randomDate(new Date(2016, 0, 1), new Date())
 		data.push(new ItemText(date, title, subtitle, description, mediaLayout, media))
 		i++
