@@ -11,14 +11,14 @@
 			</template>
 		</div>
 		<transition name="fade">
-			<i v-show="showMediaNavigationLeft"
+			<i v-if="showMediaNavigationLeft"
+			   key="nav-left"
 			   class="pdm-media-slider-nav_left"
 			   @click="onClickArrowLeft">
 				<img src="../../assets/images/arrow-left.svg"/>
 			</i>
-		</transition>
-		<transition name="fade">
-			<i v-show="showMediaNavigationRight"
+			<i v-if="showMediaNavigationRight"
+			   key="nav-right"
 			   class="pdm-media-slider-nav_right"
 			   @click="onClickArrowRight">
 				<img src="../../assets/images/arrow-right.svg"/>
@@ -64,7 +64,7 @@
 		},
 		mounted(){
 			this.handleMediaNavigation()
-			window.addEventListener('resize', debounce(this.handleMediaNavigation), 150)
+			window.addEventListener('resize', debounce(this.handleMediaNavigation, 150))
 		},
 		beforeDestroy(){
 			window.removeEventListener('resize', this.handleMediaNavigation)

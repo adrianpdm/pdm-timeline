@@ -68,7 +68,7 @@
     -webkit-box-shadow: 0 .2rem 1rem 0 $subtle-color;
     -moz-box-shadow: 0 .2rem 1rem 0 $subtle-color;
     box-shadow: 0 .2rem 1rem 0 $subtle-color;
-    transition: transform .3s ease-in-out;
+    transition: all .3s ease-in-out;
     transform: translateY(0);
 
     > img {
@@ -90,7 +90,7 @@
       -moz-box-shadow: 0 .2rem 1.5rem -.2rem transparentize($accent-color, .5);
       box-shadow: 0 .2rem 1.5rem -.2rem transparentize($accent-color, .5);
       opacity: 0;
-      transition: opacity .3s ease-in;
+      transition: all .3s ease-in;
     }
 
     &:hover {
