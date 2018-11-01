@@ -43,6 +43,13 @@
 				validator: (val) => {
 					return ['ltr', 'rtl'].indexOf(val) !== -1
 				}
+			},
+			itemSize: {
+				type: String,
+				default: 'tile',
+				validator: (val) => {
+					return ['tile', 'full'].indexOf(val) !== -1
+				}
 			}
 		},
 		data(){
@@ -53,8 +60,6 @@
 				audioTypeRegex: /(ogg|mp3|wav|flac|aac)(\?.*)?$/,
 				showMediaNavigationLeft: false,
 				showMediaNavigationRight: false,
-				isShowingFirstItem: false,
-				isShowingLastItem: false,
 			}
 		},
 		mounted(){
@@ -114,9 +119,9 @@
 					? lastVisibleRect.right
 					: lastVisibleRect.left
 
-				this.isShowingFirstItem = start <= firstVisibleStart && firstVisibleStart <= end
-				this.isShowingLastItem = start <= lastVisibleEnd && lastVisibleEnd <= end
-				this.setEachMediaNavigationVisibility(!this.isShowingFirstItem, !this.isShowingLastItem)
+				let isShowingFirstItem = start <= firstVisibleStart && firstVisibleStart <= end
+				let isShowingLastItem = start <= lastVisibleEnd && lastVisibleEnd <= end
+				this.setEachMediaNavigationVisibility(!isShowingFirstItem, !isShowingLastItem)
 			},
 			setEachMediaNavigationVisibility(showLeft, showRight) {
 				if (this.direction === "rtl") {

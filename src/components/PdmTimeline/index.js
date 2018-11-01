@@ -1,7 +1,6 @@
 import Vue from "vue"
 import PdmTimeline from "./PdmTimeline"
-import "../../assets/styles/pdm-timeline.scss"
-import "../../assets/styles/pdm-media-slider.scss"
+import "../../assets/styles/style.scss"
 
 const Components = [
 	PdmTimeline
