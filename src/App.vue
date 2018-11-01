@@ -26,12 +26,12 @@
 	}
 </script>
 
-<style scoped>
+<style>
 	body {
 		padding: 0;
 		margin: 0;
 	}
-	#app /deep/ {
+	#app {
 		font-family: 'Roboto', Helvetica, Arial, sans-serif;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;

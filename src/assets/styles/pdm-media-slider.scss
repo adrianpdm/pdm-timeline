@@ -1,0 +1,120 @@
+@import "../../assets/styles/_variables.scss";
+
+.pdm-media-slider-inner {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+
+  &[data-direction="rtl"] {
+    direction: rtl;
+
+    > * {
+      margin-left: 1rem;
+    }
+  }
+
+  &[data-direction="ltr"] {
+    direction: ltr;
+
+    > * {
+      margin-right: 1rem;
+    }
+  }
+}
+
+.pdm-media-slider-item {
+  position: relative;
+  display: inline-block;
+  width: $media-size;
+  height: $media-size;
+  direction: ltr;
+
+  &::before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    content: #{attr(data-index)};
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding-top: calc(50% - 1rem);
+    border: 2px solid #ececec;
+    border-radius: 10%;
+    text-align: center;
+    font-size: 2rem;
+    font-style: normal;
+    color: #dadada;
+  }
+}
+
+.pdm-media-slider-nav {
+  &_left, &_right {
+    display: block;
+    position: absolute;
+    top: calc(50% - #{$media-arrow-size / 2});
+    height: $media-arrow-size;
+    width: $media-arrow-size;
+    padding: calc(#{$media-arrow-size / 2} - .5rem);
+    background-color: white;
+    border-radius: 100%;
+    font-size: 1rem;
+    font-style: normal;
+    line-height: 1rem;
+    -webkit-transition: all .3s;
+    -moz-transition: all .3s;
+    -ms-transition: all .3s;
+    -o-transition: all .3s;
+    -webkit-box-shadow: 0 .2rem 1rem 0 $subtle-color;
+    -moz-box-shadow: 0 .2rem 1rem 0 $subtle-color;
+    box-shadow: 0 .2rem 1rem 0 $subtle-color;
+    transition: transform .3s ease-in-out;
+    transform: translateY(0);
+
+    > img {
+      position: relative;
+      width: 100%;
+      height: auto;
+    }
+
+    &::before {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 100%;
+      -webkit-box-shadow: 0 .2rem 1.5rem -.2rem transparentize($accent-color, .5);
+      -moz-box-shadow: 0 .2rem 1.5rem -.2rem transparentize($accent-color, .5);
+      box-shadow: 0 .2rem 1.5rem -.2rem transparentize($accent-color, .5);
+      opacity: 0;
+      transition: opacity .3s ease-in;
+    }
+
+    &:hover {
+      transform: translateY(-.2rem);
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+
+  &_left {
+    left: calc(#{$media-arrow-size} * -1 / 2);
+    > img {
+      left: -.1rem;
+    }
+  }
+
+  &_right {
+    right: calc(#{$media-arrow-size} * -1 / 2);
+    > img {
+      right: -.1rem;
+    }
+  }
+}

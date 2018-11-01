@@ -1,0 +1,28 @@
+$accent-color: purple;
+$subtle-color: grey;
+$shadow-color: #6a6a6a;
+
+$divider-width: 2px;
+$divider-color: mix($subtle-color, white, 25%);
+$dot-radius: 16px;
+$dot-border-width: 4px;
+$dot-fill-color: white;
+$dot-border-color: lighten($accent-color, 10);
+
+$group-title-font-weight: 400;
+$group-title-color: mix($accent-color, black, 90%);
+$group-bottom-border-width: 2rem;
+$item-date-font-weight: 700;
+$item-date-color: mix($subtle-color, white, 50%);
+$item-title-font-weight: 500;
+$item-title-color: lighten($accent-color, 5);
+$item-subtitle-font-weight: normal;
+$item-subtitle-color:  mix($accent-color, white, 50%);
+$item-description-font-weight: normal;
+$item-description-color: #212121;
+
+$alternate-middle-column-width: calc(#{$dot-radius} + #{$dot-border-width * 2});
+$alternate-side-column-width: calc(50% - #{$alternate-middle-column-width / 2});
+
+$media-size: 8rem;
+$media-arrow-size: 1.5rem;

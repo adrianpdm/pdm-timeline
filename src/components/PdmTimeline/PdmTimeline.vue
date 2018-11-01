@@ -1,24 +1,21 @@
 <template>
 	<div :class="['pdm_tl', `is-${this.position}`]">
 		<template v-for="data in groupedData">
-			<div :key="`${data.group}`"
-			     class="pdm-tl_group"
-			     :aria-label="formatGroupName(data.group, true)"
-			>
+			<div class="pdm-tl_group"
+			     :key="`${data.group}`"
+			     :aria-label="formatGroupName(data.group, true)">
 				<span class="pdm-tl_group-title">{{formatGroupName(data.group)}}</span>
-				<ul class="pdm-tl_group-events"
-				>
+				<ul class="pdm-tl_group-events">
 					<PdmTimelineItem
 							v-for="(item, i) in data.events"
-							:keys="`item-${i}`"
+							:key="`item-${i}`"
 							:position="getItemPosition(item.date)"
 							:date="item.date"
 							:title="item.title"
 							:subtitle="item.subtitle"
 							:description="item.description"
 							:media-layout="item.mediaLayout"
-							:media="item.media"
-					>
+							:media="item.media">
 					</PdmTimelineItem>
 				</ul>
 				<div class="pdm-tl_group-end"></div>
@@ -65,9 +62,12 @@
 			return {}
 		},
 		computed: {
-			sortedData(){
-				return this.data.sort((a, b) => {
-					return b.date.getTime() - a.date.getTime()
+			sortedData() {
+				return [...this.data].sort((a, b) => {
+					let timeDiff = b.date.getTime() - a.date.getTime()
+					return timeDiff === 0
+						? a.title - b.title
+						: timeDiff
 				})
 			},
 			groupedData() {
@@ -103,15 +103,15 @@
 				if (date.length === 1) {
 					return string
 				}
-				return DateUtils.format(new Date(date[0], date[1]), inverse? "YYYY MMMM" : "MMMM YYYY")
+				return DateUtils.format(new Date(date[0], date[1]), inverse ? "YYYY MMMM" : "MMMM YYYY")
 			},
-			getItemPosition(itemDate){
-				let index = this.sortedData.findIndex((o)=>{
+			getItemPosition(itemDate) {
+				let index = this.sortedData.findIndex((o) => {
 					return o.date === itemDate
 				})
 
-				return this.position === 'alternate'
-					? (index + 1) % 2 === 0 ? 'right' : 'left'
+				return this.position === "alternate"
+					? (index + 1) % 2 === 0 ? "right" : "left"
 					: this.position
 			}
 		}
@@ -119,6 +119,6 @@
 	}
 </script>
 
-<style>
+<style lang="scss">
 
 </style>
