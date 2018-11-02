@@ -67,7 +67,7 @@
 
 		},
 		computed: {
-			sortedMedia() {
+			sortedItems() {
 				if (this.position === "left") {
 					return [...this.media].reverse()
 				}
