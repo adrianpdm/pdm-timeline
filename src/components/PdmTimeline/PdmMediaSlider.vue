@@ -5,7 +5,7 @@
 		     ref="mediaContainer">
 			<template v-for="i in data.length">
 				<i :key="`media-${i}`"
-				   class="pdm-media-slider-item"
+				   class="pdm-media-slider-item is-loading"
 				   :data-index="i"
 				   :style="{width: itemSize, height: itemSize, backgroundSize: 'cover'}">
 				</i>
@@ -117,10 +117,13 @@
 
 					media.onload = (e)=>{
 						console.log(media.src)
+						this.getItem(itemIndex).classList.remove("is-loading")
 						this.getItem(itemIndex).style.backgroundImage = `url(${media.src})`
 					}
 
 					media.onerror = (e)=>{
+						this.getItem(itemIndex).classList.remove("is-loading")
+						this.getItem(itemIndex).classList.add("is-error")
 						console.log("Error on loading resources from " + media.src)
 					}
 
