@@ -5,3 +5,42 @@
 .fade-enter, .fade-leave-to {
   opacity: 0;
 }
+
+@mixin elevate-on-hover($elevation, $x-offset, $y-offset, $blur, $spread, $color) {
+  -webkit-transition: transform .3s ease-in-out;
+  -moz-transition: transform .3s ease-in-out;
+  -ms-transition: transform .3s;
+  -o-transition: transform .3s ease-in-out;
+  transition: transform .3s ease-in-out;
+  transform: translateY(0);
+  -webkit-box-shadow: $x-offset $y-offset $blur $spread transparentize($color, .5);
+  -moz-box-shadow: $x-offset $y-offset $blur $spread transparentize($color, .5);
+  box-shadow: $x-offset $y-offset $blur $spread transparentize($color, .5);
+
+  &:hover{
+    transform: translateY($elevation * -1);
+  }
+
+  &::before{
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    -webkit-transition: opacity .3s ease-in-out;
+    -moz-transition: opacity .3s ease-in-out;
+    -ms-transition: opacity .3s;
+    -o-transition: opacity .3s ease-in-out;
+    transition: opacity .3s ease-in-out;
+    opacity: 0;
+    -webkit-box-shadow: $x-offset ($elevation) ($blur * 2) $spread transparentize($color, .5);
+    -moz-box-shadow: $x-offset ($elevation) ($blur * 2) $spread transparentize($color, .5);
+    box-shadow: $x-offset ($elevation) ($blur * 2) $spread transparentize($color, .5);
+  }
+
+  &:hover::before{
+    opacity: 1;
+  }
+}

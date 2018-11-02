@@ -3,9 +3,9 @@
   display: inline-block;
   position: absolute;
   top: 100%;
-  left: calc(50% - #{$group-bottom-border-width / 2});
-  width: $group-bottom-border-width;
-  height: $divider-width;
+  left: calc(50% - #{$group-bottom-border-thickness / 2});
+  width: $group-bottom-border-thickness;
+  height: $divider-thickness;
   background-color: $divider-color;
   z-index: 1010;
 }
@@ -106,7 +106,7 @@ ul.pdm-tl_group-events {
 
 .pdm-tl_item-divider {
   position: relative;
-  width: calc(#{$dot-radius} + #{$dot-border-width * 2});
+  width: calc(#{$dot-width} + #{$dot-border-thickness * 2});
   text-align: center;
   padding: 1rem 0;
 
@@ -116,7 +116,7 @@ ul.pdm-tl_group-events {
     position: absolute;
     top: 0;
     left: calc(50% - 1px);
-    width: $divider-width;
+    width: $divider-thickness;
     height: 100%;
     background-color: $divider-color;
   }
@@ -124,11 +124,11 @@ ul.pdm-tl_group-events {
   &-dot {
     position: relative;
     display: inline-block;
-    width: $dot-radius;
-    height: $dot-radius;
+    width: $dot-width;
+    height: $dot-width;
     border-radius: 100%;
     background: $dot-fill-color;
-    border: $dot-border-width $dot-border-color solid;
+    border: $dot-border-thickness $dot-border-color solid;
     transform: translateY(.15rem);
   }
 }
