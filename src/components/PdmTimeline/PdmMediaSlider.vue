@@ -1,31 +1,28 @@
 <template>
-	<div class="pdm-media-slider" ref="mediaContainer">
-		<div class="pdm-media-slider-inner" :data-direction="direction">
-			<template v-for="(path, i) in sortedMedia">
+	<div class="pdm-media-slider">
+		<div class="pdm-media-slider-inner"
+		     :data-direction="direction"
+		     ref="mediaContainer">
+			<template v-for="i in data.length">
 				<i :key="`media-${i}`"
 				   class="pdm-media-slider-item"
-				   :data-index="i + 1"
-				   :type="checkFileType(path)"
-				   :style="bindMediaStyle(path)">
+				   :data-index="i"
+				   :style="{width: itemSize, height: itemSize, backgroundSize: 'cover'}">
 				</i>
 			</template>
 		</div>
-		<transition name="fade">
-			<i v-if="showNavStart"
-			   class="pdm-media-slider-nav_left"
-			   @click="onClickArrowLeft">
-				<img class="pdm-media-slider-nav-icon"
-				     src="../../assets/images/arrow-left.svg"/>
-			</i>
-		</transition>
-		<transition name="fade">
-			<i v-if="showNavEnd"
-			   class="pdm-media-slider-nav_right"
-			   @click="onClickArrowRight">
-				<img class="pdm-media-slider-nav-icon"
-				     src="../../assets/images/arrow-right.svg"/>
-			</i>
-		</transition>
+		<template v-for="position in ['start', 'end']">
+			<transition name="fade">
+				<span v-if="position === 'start'? showNavStart : showNavEnd"
+				      :data-direction="direction"
+				      :class="[`pdm-media-slider-nav_${position}`]"
+				      @click="onClickMediaNav(position)">
+					<i class="pdm-media-slider-nav_icon">
+						<img src="../../assets/images/arrow-nav.svg"/>
+					</i>
+				</span>
+			</transition>
+		</template>
 	</div>
 </template>
 
@@ -37,67 +34,75 @@
 		props: {
 			data: {
 				type: Array,
-				default: ()=> []
+				default: () => []
 			},
 			direction: {
 				type: String,
-				default: 'ltr',
+				default: "ltr",
 				validator: (val) => {
-					return ['ltr', 'rtl'].indexOf(val) !== -1
+					return ["ltr", "rtl"].indexOf(val) !== -1
+				}
+			},
+			display: {
+				type: String,
+				default: "tile",
+				validator: (val) => {
+					return ["tile", "full"].indexOf(val) !== -1
 				}
 			},
 			itemSize: {
-				type: String,
-				default: 'tile',
-				validator: (val) => {
-					return ['tile', 'full'].indexOf(val) !== -1
-				}
+				type: String | Number,
+				default: "8rem",
 			}
 		},
-		data(){
+		data() {
 			return {
 				fileExtensionRegex: /(?:\.([^.]+))?$/,
 				imageTypeRegex: /(png|jpe?g|gif|svg)(\?.*)?$/,
 				videoTypeRegex: /(mp4|webm)(\?.*)?$/,
 				audioTypeRegex: /(ogg|mp3|wav|flac|aac)(\?.*)?$/,
-				showNavStart: false,
-				showNavEnd: false,
-				firstVisibleItemIndex: 0,
-				lastVisibleItemIndex: 0,
+				firstCompletelyVisibleItemIndex: 0,
+				lastCompletelyVisibleItemIndex: 0,
+				mediaCache: new Map()
 			}
 		},
-		mounted(){
+		mounted() {
+			this.init()
 			this.populateItems()
 				.then(()=>{
-					this.updateNavVisibility()
-					window.addEventListener('resize', debounce(this.handleSliderResize, 100))
+					window.addEventListener("resize", debounce(this.handleSliderResize, 50))
 				})
 				.catch(()=>{
 
 				})
 		},
-		beforeDestroy(){
-			window.removeEventListener('resize', this.handleSliderResize)
+		beforeDestroy() {
+			window.removeEventListener("resize", this.handleSliderResize)
 		},
 		computed: {
-			sortedMedia() {
-				if (this.direction === "rtl") {
-					return [...this.data].reverse()
-				}
-				return this.data
+			mediaContainer() {
+				return this.$refs.mediaContainer
 			},
-			mediaContainer(){
-				return this.$refs.mediaContainer.getElementsByClassName('pdm-media-slider-inner')[0]
+			showNavStart() {
+				return this.firstCompletelyVisibleItemIndex > 0
+			},
+			showNavEnd() {
+				return this.lastCompletelyVisibleItemIndex < (this.data.length - 1)
 			}
 		},
 		methods: {
-			async populateItems(){
-
+			init(){
+				this.updateNavigationDisplay()
 			},
-			checkFileType(filePath) {
-				let ext = this.fileExtensionRegex.exec(filePath)[1]
+			async populateItems() {
+				this.mediaContainer.childNodes.forEach((child, index)=>{
+					this.loadMedia(index)
+				})
+			},
+			checkFileType(itemIndex) {
+				let ext = this.fileExtensionRegex.exec(this.data[itemIndex])[1]
 				if (this.imageTypeRegex.test(ext)) {
-					return "img"
+					return "image"
 				} else if (this.videoTypeRegex.test(ext)) {
 					return "video"
 				} else if (this.audioTypeRegex.test(ext)) {
@@ -106,56 +111,59 @@
 					throw new Error("Unsupported media type: " + ext)
 				}
 			},
-			bindMediaStyle(path) {
-				let background = `url(${path})`
-				return {
-					backgroundSize: "cover"
+			loadMedia(itemIndex) {
+				if (this.firstCompletelyVisibleItemIndex <= itemIndex && itemIndex <= this.lastCompletelyVisibleItemIndex){
+					let media = new Image()
+
+					media.onload = (e)=>{
+						console.log(media.src)
+						this.getItem(itemIndex).style.backgroundImage = `url(${media.src})`
+					}
+
+					media.onerror = (e)=>{
+						console.log("Error on loading resources from " + media.src)
+					}
+
+					media.src = this.data[itemIndex]
 				}
 			},
-			onClickArrowRight() {
-				console.log("click next arrow")
+			getItem(index){
+				return this.mediaContainer.childNodes[index]
 			},
-			onClickArrowLeft() {
-				console.log("click previous arrow")
+			onClickMediaNav(direction) {
+
 			},
 			handleSliderResize() {
-				this.updateNavVisibility()
+				this.updateNavigationDisplay()
 			},
-			updateNavVisibility() {
-				let showStart = this.findFirstVisibleElement().index > 0
-				let showEnd = this.findLastVisibleElement().index < ( this.data.length - 1 )
-
-				if (this.direction === "rtl") {
-					[showStart, showEnd] = [showEnd, showStart]
-				}
-
-				this.showNavStart = showStart
-				this.showNavEnd = showEnd
+			updateNavigationDisplay() {
+				this.firstCompletelyVisibleItemIndex = this.findFirstVisibleElement().index
+				this.lastCompletelyVisibleItemIndex = this.findLastVisibleElement().index
 			},
-			findFirstVisibleElement(partial = false){
+			findFirstVisibleElement(partial = false) {
 				return this.findVisibleElement("first", partial)
 			},
-			findLastVisibleElement(partial = false){
+			findLastVisibleElement(partial = false) {
 				return this.findVisibleElement("last", partial)
 			},
-			findVisibleElement(position, partial = false){
+			findVisibleElement(position, partial = false) {
+				let element, elementIndex
+
 				let [boundStart, boundEnd] = [
 					this.mediaContainer.getBoundingClientRect().left,
 					this.mediaContainer.getBoundingClientRect().right
 				]
 
 				let children = this.mediaContainer.childNodes
-
-				let element, elementIndex
 				let [index, stop, dir] = position === "first" ? [0, children.length, 1] : [children.length - 1, -1, -1]
-				for (index; index !== stop; index += dir){
+				for (index; index !== stop; index += dir) {
 					let child = children[index]
 					let [childStart, childEnd] = [
 						child.getBoundingClientRect().left,
 						child.getBoundingClientRect().right
 					]
 
-					if (this.isElementWithinBound([childStart, childEnd], [boundStart, boundEnd], partial)){
+					if (this.isElementWithinBound([childStart, childEnd], [boundStart, boundEnd], partial)) {
 						element = child
 						elementIndex = index
 						break
@@ -167,10 +175,10 @@
 					index: elementIndex
 				}
 			},
-			isElementWithinBound([elementStart, elementEnd], [boundStart, boundEnd], partial = false){
+			isElementWithinBound([elementStart, elementEnd], [boundStart, boundEnd], partial = false) {
 				let isStartWithin = boundStart <= elementStart && elementStart <= boundEnd
 				let isEndWithin = boundStart <= elementEnd && elementEnd <= boundEnd
-				if (partial){
+				if (partial) {
 					return isStartWithin || isEndWithin
 				}
 				return isStartWithin && isEndWithin

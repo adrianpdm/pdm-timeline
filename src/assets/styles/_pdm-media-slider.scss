@@ -28,9 +28,11 @@
 .pdm-media-slider-item {
   position: relative;
   display: inline-block;
-  width: $media-size;
-  height: $media-size;
   direction: ltr;
+  border-radius: 10%;
+  background-clip: padding-box;
+  -moz-background-clip: padding;
+  -webkit-background-clip: padding-box;
 
   &::before {
     -webkit-box-sizing: border-box;
@@ -54,73 +56,53 @@
 }
 
 .pdm-media-slider-nav {
-  &_left, &_right {
+  &_start, &_end {
     display: block;
     position: absolute;
     top: .5em;
     bottom: .5em;
-    width: $divider-width;
-    background-color: $divider-color;
+    width: $divider-thickness;
+    background-color: lighten($accent-color, 65%);
   }
 
-  &_left {
+  &_start[data-direction="ltr"], &_end[data-direction="rtl"]{
     left: 0;
 
-    > img {
-      left: calc(-1 * #{$media-arrow-size / 2});
+    > .pdm-media-slider-nav_icon > img {
+      transform: rotate(90deg);
     }
   }
 
-  &_right {
+  &_start[data-direction="rtl"], &_end[data-direction="ltr"]{
     right: 0;
 
-    > img {
-      right: calc(-1 * #{$media-arrow-size / 2});
+    > .pdm-media-slider-nav_icon > img {
+      transform: rotate(-90deg);
     }
   }
 }
 
-img.pdm-media-slider-nav-icon {
+[class^="pdm-media-slider-nav_icon"] {
   display: block;
-  position: absolute;
-  top: calc(50% - #{$media-arrow-size / 2});
-  height: $media-arrow-size;
-  width: $media-arrow-size;
-  font-size: .6rem;
-  padding: .5em;
+  position: relative;
+  top: calc(50% - #{$media-nav-width / 2});
+  left: $media-nav-width * -.5;
+  height: $media-nav-width;
+  width: $media-nav-width;
   background-color: white;
   border-radius: 100%;
-  -webkit-transition: all .3s;
-  -moz-transition: all .3s;
-  -ms-transition: all .3s;
-  -o-transition: all .3s;
-  -webkit-box-shadow: 0 .2rem 1rem 0 $subtle-color;
-  -moz-box-shadow: 0 .2rem 1rem 0 $subtle-color;
-  box-shadow: 0 .2rem 1rem 0 $subtle-color;
-  transition: all .3s ease-in-out;
-  transform: translateY(0);
+  font-size: .6rem;
+  text-align: center;
+  @include elevate-on-hover(.2rem, 0, 0, 1.5rem, 0, $accent-color);
 
   &::before {
-    content: '';
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     border-radius: 100%;
-    -webkit-box-shadow: 0 .2rem 1.5rem -.2rem transparentize($accent-color, .5);
-    -moz-box-shadow: 0 .2rem 1.5rem -.2rem transparentize($accent-color, .5);
-    box-shadow: 0 .2rem 1.5rem -.2rem transparentize($accent-color, .5);
-    opacity: 0;
-    transition: all .3s ease-in;
   }
 
-  &:hover {
-    transform: translateY(-.2rem);
-  }
-
-  &:hover::before {
-    opacity: 1;
+  img {
+    position: relative;
+    top: calc(50% - #{$media-nav-icon-size / 2});
+    width: $media-nav-icon-size;
+    height: auto;
   }
 }
