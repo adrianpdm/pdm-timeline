@@ -15,9 +15,9 @@
 			<transition name="fade">
 				<span v-if="position === 'start'? showNavStart : showNavEnd"
 				      :data-direction="direction"
-				      :class="[`pdm-media-slider-nav_${position}`]"
-				      @click="onClickMediaNav(position)">
-					<i class="pdm-media-slider-nav_icon">
+				      :class="[`pdm-media-slider-nav_${position}`]">
+					<i class="pdm-media-slider-nav_icon"
+					   @click="onClickMediaNav(position)">
 						<img src="../../assets/images/arrow-nav.svg"/>
 					</i>
 				</span>
