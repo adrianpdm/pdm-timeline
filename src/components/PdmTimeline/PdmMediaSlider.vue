@@ -3,19 +3,22 @@
 		<div class="pdm-media-slider-inner"
 		     :data-direction="direction"
 		     ref="mediaContainer">
-			<template v-for="i in data.length">
-				<i :key="`media-${i}`"
-				   class="pdm-media-slider-item is-loading"
-				   :data-index="i"
-				   :style="{width: itemSize, height: itemSize, backgroundSize: 'cover'}">
-				</i>
+			<template v-for="(src, i) in data">
+				<pdm-media-slider-item
+						:key="`media-${i}`"
+						:src="data[i]"
+						:duration="duration"
+						:data-index="i"
+						:style="{width: itemSize, height: itemSize, backgroundSize: 'cover'}"
+						ref="mediaItem"
+				/>
 			</template>
 		</div>
 		<template v-for="position in ['start', 'end']">
 			<transition name="fade">
 				<span v-if="position === 'start'? showNavStart : showNavEnd"
 				      :data-direction="direction"
-				      :class="[`pdm-media-slider-nav_${position}`]">
+				      :class="[`pdm-media-slider-nav_${position}`, `is-${display}`]">
 					<i class="pdm-media-slider-nav_icon"
 					   @click="onClickMediaNav(position)">
 						<img src="../../assets/images/arrow-nav.svg"/>
@@ -28,13 +31,42 @@
 
 <script>
 	import {debounce} from "./utils"
+	import PdmMediaSliderItem from "./PdmMediaSliderItem"
+
+	let checkFileType = function(path){
+		let ext = /(?:\.([^.]+))?$/.exec(path)[1]
+		let types = {
+			image: /(png|jpe?g|gif|svg)(\?.*)?$/,
+			video: /(mp4|webm)(\?.*)?$/,
+			audio: /(ogg|mp3|wav|flac|aac)(\?.*)?$/
+		}
+
+		let result
+		for(let type in types){
+			if (typeof types[type]['test'] === 'function'){
+				if (types[type].test(ext)){
+					result = type
+					break
+				}
+			}
+		}
+		return result
+	}
 
 	export default {
 		name: "pdm-media-slider",
+		components: {PdmMediaSliderItem},
+		provide: {
+			checkFileType
+		},
 		props: {
 			data: {
 				type: Array,
 				default: () => []
+			},
+			lazy: {
+				type: Boolean,
+				default: true
 			},
 			direction: {
 				type: String,
@@ -50,31 +82,25 @@
 					return ["tile", "full"].indexOf(val) !== -1
 				}
 			},
-			itemSize: {
-				type: String | Number,
-				default: "8rem",
+			duration: {
+				type: Number,
+				default: 500
 			}
 		},
 		data() {
 			return {
-				fileExtensionRegex: /(?:\.([^.]+))?$/,
-				imageTypeRegex: /(png|jpe?g|gif|svg)(\?.*)?$/,
-				videoTypeRegex: /(mp4|webm)(\?.*)?$/,
-				audioTypeRegex: /(ogg|mp3|wav|flac|aac)(\?.*)?$/,
-				firstCompletelyVisibleItemIndex: 0,
-				lastCompletelyVisibleItemIndex: 0,
-				mediaCache: new Map()
+				firstVisibleItemIndex: 0,
+				lastVisibleItemIndex: Infinity,
+				mediaCache: new Map(),
+				showNavStart: false,
+				showNavEnd: false,
 			}
 		},
 		mounted() {
 			this.init()
-			this.populateItems()
-				.then(()=>{
-					window.addEventListener("resize", debounce(this.handleSliderResize, 50))
-				})
-				.catch(()=>{
+		},
+		updated() {
 
-				})
 		},
 		beforeDestroy() {
 			window.removeEventListener("resize", this.handleSliderResize)
@@ -83,98 +109,113 @@
 			mediaContainer() {
 				return this.$refs.mediaContainer
 			},
-			showNavStart() {
-				return this.firstCompletelyVisibleItemIndex > 0
+			mediaItems() {
+				let items = this.$refs.mediaItem
+				return !Array.isArray(items)
+					? Array.prototype.push.apply(items)
+					: items
 			},
-			showNavEnd() {
-				return this.lastCompletelyVisibleItemIndex < (this.data.length - 1)
+			itemSize(){
+				return this.display === 'tile'
+					? "8rem"
+					: "100%"
+			}
+		},
+		watch: {
+			firstVisibleItemIndex(newVal, oldVal){
+
+			},
+			lastVisibleItemIndex(newVal, oldVal){
+
 			}
 		},
 		methods: {
-			init(){
+			init() {
 				this.updateNavigationDisplay()
+				this.populateItems()
+					.then(()=>{
+						window.addEventListener("resize", debounce(this.handleSliderResize, 300))
+					})
+					.catch(()=>{
+
+					})
 			},
 			async populateItems() {
-				this.mediaContainer.childNodes.forEach((child, index)=>{
-					this.loadMedia(index)
+				this.mediaItems.forEach((item, index)=>{
+					if (typeof item['loadMedia'] === 'function'){
+						if (this.lazy){
+							if (index > this.lastVisibleItemIndex  + 1){
+								return
+							}
+						}
+						item.loadMedia()
+					}
 				})
 			},
-			checkFileType(itemIndex) {
-				let ext = this.fileExtensionRegex.exec(this.data[itemIndex])[1]
-				if (this.imageTypeRegex.test(ext)) {
-					return "image"
-				} else if (this.videoTypeRegex.test(ext)) {
-					return "video"
-				} else if (this.audioTypeRegex.test(ext)) {
-					return "audio"
-				} else {
-					throw new Error("Unsupported media type: " + ext)
+			onClickMediaNav(where) {
+				let toStart = 200,
+					toEnd = -200
+				if (this.direction === 'rtl'){
+					[toStart, toEnd] = [toEnd, toStart]
 				}
-			},
-			loadMedia(itemIndex) {
-				if (this.firstCompletelyVisibleItemIndex <= itemIndex && itemIndex <= this.lastCompletelyVisibleItemIndex){
-					let media = new Image()
 
-					media.onload = (e)=>{
-						console.log(media.src)
-						this.getItem(itemIndex).classList.remove("is-loading")
-						this.getItem(itemIndex).style.backgroundImage = `url(${media.src})`
+				this.mediaItems.forEach((item, index)=>{
+					if (typeof item['slide'] === 'function'){
+						item.slide(where === 'start' ? toStart : toEnd)
+						if (!item.isLoaded){
+							item.loadMedia()
+						}
 					}
+				})
 
-					media.onerror = (e)=>{
-						this.getItem(itemIndex).classList.remove("is-loading")
-						this.getItem(itemIndex).classList.add("is-error")
-						console.log("Error on loading resources from " + media.src)
-					}
-
-					media.src = this.data[itemIndex]
-				}
-			},
-			getItem(index){
-				return this.mediaContainer.childNodes[index]
-			},
-			onClickMediaNav(direction) {
-
+				setTimeout(()=>{
+					this.updateNavigationDisplay()
+				}, this.duration + 1)
 			},
 			handleSliderResize() {
 				this.updateNavigationDisplay()
 			},
 			updateNavigationDisplay() {
-				this.firstCompletelyVisibleItemIndex = this.findFirstVisibleElement().index
-				this.lastCompletelyVisibleItemIndex = this.findLastVisibleElement().index
+				this.firstVisibleItemIndex = this.findFirstVisibleElement().index
+				this.lastVisibleItemIndex = this.findLastVisibleElement().index
+
+				this.showNavStart = this.firstVisibleItemIndex > 0
+				this.showNavEnd = this.lastVisibleItemIndex < (this.data.length - 1)
 			},
-			findFirstVisibleElement(partial = false) {
+			findFirstVisibleElement(partial) {
 				return this.findVisibleElement("first", partial)
 			},
-			findLastVisibleElement(partial = false) {
+			findLastVisibleElement(partial) {
 				return this.findVisibleElement("last", partial)
 			},
-			findVisibleElement(position, partial = false) {
+			findVisibleElement(position, partial) {
 				let element, elementIndex
 
-				let [boundStart, boundEnd] = [
-					this.mediaContainer.getBoundingClientRect().left,
-					this.mediaContainer.getBoundingClientRect().right
-				]
-
-				let children = this.mediaContainer.childNodes
-				let [index, stop, dir] = position === "first" ? [0, children.length, 1] : [children.length - 1, -1, -1]
-				for (index; index !== stop; index += dir) {
-					let child = children[index]
-					let [childStart, childEnd] = [
-						child.getBoundingClientRect().left,
-						child.getBoundingClientRect().right
+				if (this.mediaContainer && typeof this.mediaContainer['getBoundingClientRect'] === 'function'){
+					let [boundStart, boundEnd] = [
+						this.mediaContainer.getBoundingClientRect().left,
+						this.mediaContainer.getBoundingClientRect().right
 					]
 
-					if (this.isElementWithinBound([childStart, childEnd], [boundStart, boundEnd], partial)) {
-						element = child
-						elementIndex = index
-						break
+					let children = this.mediaContainer.childNodes
+					let [index, stop, dir] = position === "first" ? [0, children.length, 1] : [children.length - 1, -1, -1]
+					for (index; index !== stop; index += dir) {
+						let child = children[index]
+						let [childStart, childEnd] = [
+							child.getBoundingClientRect().left,
+							child.getBoundingClientRect().right
+						]
+
+						if (this.isElementWithinBound([childStart, childEnd], [boundStart, boundEnd], partial)) {
+							element = child
+							elementIndex = index
+							break
+						}
 					}
 				}
 
 				return {
-					item: element,
+					element: element,
 					index: elementIndex
 				}
 			},

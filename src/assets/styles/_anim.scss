@@ -44,3 +44,28 @@
     opacity: 1;
   }
 }
+
+@keyframes GradientAnimation  {
+  0%{background-position: 85% 0%}
+  100%{background-position: 0% 85%}
+}
+
+//@-moz-keyframes GradientAnimation  {
+//  0%{background-position: 0% 0%}
+//  100%{background-position: 100% 100%}
+//}
+//
+//@-webkit-keyframes GradientAnimation  {
+//  0%{background-position: 0% 0%}
+//  100%{background-position: 100% 100%}
+//}
+
+@mixin skeleton-gradient-anim($startColor: #eee, $endColor: #fff, $degree: 45deg){
+  $clrStart: transparentize($startColor, .5);
+  $clrEnd: transparentize($endColor, .5);
+  background: linear-gradient($degree, $clrStart 0%, $clrEnd 33%, $clrStart 66%, $clrEnd 100%);
+  background-size: 400% 400%;
+  -webkit-animation: GradientAnimation 2s linear infinite;
+  -o-animation: GradientAnimation 2s linear infinite;
+  animation: GradientAnimation 2s linear infinite;
+}
