@@ -1,29 +1,29 @@
 <template>
 	<div class="pdm-media-slider">
-		<div class="pdm-media-slider-inner"
-		     :data-direction="direction"
-		     ref="mediaContainer">
-			<template v-for="(src, i) in data">
-				<pdm-media-slider-item
-						:key="`media-${i}`"
-						:src="data[i]"
-						:duration="duration"
-						:data-index="i"
-						:style="{width: itemSize, height: itemSize, backgroundSize: 'cover'}"
-						ref="mediaItem"
-				/>
-			</template>
+		<div class="pdm-media-slider-outer" :data-direction="direction" ref="mediaOuter">
+			<div class="pdm-media-slider-inner" ref="mediaInner">
+				<template v-for="(src, i) in data">
+					<pdm-media-slider-item
+							:key="`media-${i}`"
+							:src="data[i]"
+							:duration="duration"
+							:data-index="i"
+							:style="{width: itemSize, height: itemSize, backgroundSize: 'cover'}"
+							ref="mediaItem"
+					/>
+				</template>
+			</div>
 		</div>
 		<template v-for="position in ['start', 'end']">
 			<transition name="fade">
-				<span v-if="position === 'start'? showNavStart : showNavEnd"
-				      :data-direction="direction"
-				      :class="[`pdm-media-slider-nav_${position}`, `is-${display}`]">
-					<i class="pdm-media-slider-nav_icon"
-					   @click="onClickMediaNav(position)">
-						<img src="../../assets/images/arrow-nav.svg"/>
-					</i>
-				</span>
+					<span v-if="position === 'start'? showNavStart : showNavEnd"
+					      :data-direction="direction"
+					      :class="[`pdm-media-slider-nav_${position}`, `is-${display}`]">
+						<i class="pdm-media-slider-nav_icon"
+						   @click="onClickMediaNav(position)">
+							<img src="../../assets/images/arrow-nav.svg"/>
+						</i>
+					</span>
 			</transition>
 		</template>
 	</div>
@@ -33,7 +33,7 @@
 	import {debounce} from "./utils"
 	import PdmMediaSliderItem from "./PdmMediaSliderItem"
 
-	let checkFileType = function(path){
+	let checkFileType = function(path) {
 		let ext = /(?:\.([^.]+))?$/.exec(path)[1]
 		let types = {
 			image: /(png|jpe?g|gif|svg)(\?.*)?$/,
@@ -42,9 +42,9 @@
 		}
 
 		let result
-		for(let type in types){
-			if (typeof types[type]['test'] === 'function'){
-				if (types[type].test(ext)){
+		for (let type in types) {
+			if (typeof types[type]["test"] === "function") {
+				if (types[type].test(ext)) {
 					result = type
 					break
 				}
@@ -85,15 +85,20 @@
 			duration: {
 				type: Number,
 				default: 500
+			},
+			size: {
+				type: String,
+				default: 'normal',
+				validator: (val) => {
+					return ["small", "normal", "large"].indexOf(val) !== -1
+				}
 			}
 		},
 		data() {
 			return {
-				firstVisibleItemIndex: 0,
-				lastVisibleItemIndex: Infinity,
-				mediaCache: new Map(),
-				showNavStart: false,
-				showNavEnd: false,
+				distanceToStart: 0,
+				distanceToEnd: 0,
+				currentTranslation: 0
 			}
 		},
 		mounted() {
@@ -106,127 +111,139 @@
 			window.removeEventListener("resize", this.handleSliderResize)
 		},
 		computed: {
-			mediaContainer() {
-				return this.$refs.mediaContainer
+			mediaOuter() {
+				return this.$refs.mediaOuter
+			},
+			mediaInner() {
+				return this.$refs.mediaInner
 			},
 			mediaItems() {
 				let items = this.$refs.mediaItem
-				return !Array.isArray(items)
-					? Array.prototype.push.apply(items)
-					: items
+				if (!Array.isArray(items)){
+					items = Array.prototype.push.apply(items)
+				}
+				return items
 			},
-			itemSize(){
-				return this.display === 'tile'
-					? "8rem"
+			componentSizing() {
+				let itemSize
+				switch (this.size){
+					case "small":
+						break
+					case "normal":
+						itemSize = 120
+						break
+					case "huge":
+						break
+				}
+				return {
+					itemSize
+				}
+			},
+			itemSize() {
+				return this.display === "tile"
+					? `${this.componentSizing.itemSize}px`
 					: "100%"
-			}
-		},
-		watch: {
-			firstVisibleItemIndex(newVal, oldVal){
-
 			},
-			lastVisibleItemIndex(newVal, oldVal){
-
+			showNavStart(){
+				return this.direction === "rtl"
+					? this.distanceToStart < 0
+					: this.distanceToStart > 0
+			},
+			showNavEnd(){
+				return this.direction === "rtl"
+					? this.distanceToEnd > 0
+					: this.distanceToEnd < 0
 			}
 		},
+		watch: {},
 		methods: {
 			init() {
-				this.updateNavigationDisplay()
+				this.calculateDistance()
 				this.populateItems()
-					.then(()=>{
-						window.addEventListener("resize", debounce(this.handleSliderResize, 300))
-					})
-					.catch(()=>{
-
-					})
+				window.addEventListener("resize", debounce(this.handleSliderResize, 300))
 			},
-			async populateItems() {
-				this.mediaItems.forEach((item, index)=>{
-					if (typeof item['loadMedia'] === 'function'){
-						if (this.lazy){
-							if (index > this.lastVisibleItemIndex  + 1){
-								return
-							}
-						}
-						item.loadMedia()
-					}
-				})
-			},
-			onClickMediaNav(where) {
-				let toStart = 200,
-					toEnd = -200
-				if (this.direction === 'rtl'){
-					[toStart, toEnd] = [toEnd, toStart]
-				}
-
-				this.mediaItems.forEach((item, index)=>{
-					if (typeof item['slide'] === 'function'){
-						item.slide(where === 'start' ? toStart : toEnd)
-						if (!item.isLoaded){
+			populateItems() {
+				this.mediaItems.forEach((item) => {
+					if (typeof item["loadMedia"] === "function") {
+						if (this.checkIfWithinBounds(this.mediaOuter, item.$el, false)){
 							item.loadMedia()
 						}
 					}
 				})
+			},
+			onClickMediaNav(to) {
+				let maxSlidingDistance = this.mediaOuter.getBoundingClientRect().width / 2
+				let [toStart, toEnd] = [this.distanceToStart, this.distanceToEnd]
 
+				let slidingDistance = to === "end"
+					? toEnd
+					: toStart
+
+				let multiplier = Math.sign(slidingDistance)
+				if (Math.abs(maxSlidingDistance) < Math.abs(slidingDistance)){
+					slidingDistance = multiplier * maxSlidingDistance
+				}
+
+				this.calculateDistance(slidingDistance)
+				this.currentTranslation += slidingDistance
+				this.slideItem(this.currentTranslation)
+			},
+			async slideItem(distance){
+				this.mediaInner.style.transform = `translate(${distance}px)`
 				setTimeout(()=>{
-					this.updateNavigationDisplay()
-				}, this.duration + 1)
+					this.populateItems()
+				}, 600)
 			},
 			handleSliderResize() {
-				this.updateNavigationDisplay()
+				this.calculateDistance()
 			},
-			updateNavigationDisplay() {
-				this.firstVisibleItemIndex = this.findFirstVisibleElement().index
-				this.lastVisibleItemIndex = this.findLastVisibleElement().index
+			calculateDistance(curX = 0){
+				let [start, end] = ["left", "right"]
 
-				this.showNavStart = this.firstVisibleItemIndex > 0
-				this.showNavEnd = this.lastVisibleItemIndex < (this.data.length - 1)
-			},
-			findFirstVisibleElement(partial) {
-				return this.findVisibleElement("first", partial)
-			},
-			findLastVisibleElement(partial) {
-				return this.findVisibleElement("last", partial)
-			},
-			findVisibleElement(position, partial) {
-				let element, elementIndex
-
-				if (this.mediaContainer && typeof this.mediaContainer['getBoundingClientRect'] === 'function'){
-					let [boundStart, boundEnd] = [
-						this.mediaContainer.getBoundingClientRect().left,
-						this.mediaContainer.getBoundingClientRect().right
-					]
-
-					let children = this.mediaContainer.childNodes
-					let [index, stop, dir] = position === "first" ? [0, children.length, 1] : [children.length - 1, -1, -1]
-					for (index; index !== stop; index += dir) {
-						let child = children[index]
-						let [childStart, childEnd] = [
-							child.getBoundingClientRect().left,
-							child.getBoundingClientRect().right
-						]
-
-						if (this.isElementWithinBound([childStart, childEnd], [boundStart, boundEnd], partial)) {
-							element = child
-							elementIndex = index
-							break
-						}
-					}
+				if (this.direction === "rtl"){
+					[start, end] = [end, start]
 				}
 
-				return {
-					element: element,
-					index: elementIndex
-				}
+				let [outerStart, outerEnd] = [
+					this.mediaOuter.getBoundingClientRect()[start] ,
+					this.mediaOuter.getBoundingClientRect()[end]
+				]
+
+				let [innerStart, innerEnd] = [
+					this.mediaInner.getBoundingClientRect()[start] + curX,
+					this.mediaInner.getBoundingClientRect()[end] + curX
+				]
+
+				this.distanceToStart = outerStart - innerStart
+				this.distanceToEnd = outerEnd - innerEnd
 			},
-			isElementWithinBound([elementStart, elementEnd], [boundStart, boundEnd], partial = false) {
-				let isStartWithin = boundStart <= elementStart && elementStart <= boundEnd
-				let isEndWithin = boundStart <= elementEnd && elementEnd <= boundEnd
+			checkIfWithinBounds(container, element, partial = false){
+				let isValidElement = [container, element].every((obj)=>{
+					let prop = "getBoundingClientRect"
+					return typeof obj[prop] === 'function'
+				})
+
+				if (!isValidElement){
+					throw new Error()
+				}
+
+				let [containerStart, containerEnd] = [
+					container.getBoundingClientRect().left,
+					container.getBoundingClientRect().right
+				]
+
+				let [elStart, elEnd] = [
+					element.getBoundingClientRect().left,
+					element.getBoundingClientRect().right
+				]
+
+				let isStartWithin = containerStart <= elStart && elStart <= containerEnd
+				let isEndWithin = containerStart <= elEnd && elEnd <= containerEnd
 				if (partial) {
 					return isStartWithin || isEndWithin
 				}
 				return isStartWithin && isEndWithin
-			}
+			},
 		}
 	}
 </script>

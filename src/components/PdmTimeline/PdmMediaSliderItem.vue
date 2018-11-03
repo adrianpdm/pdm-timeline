@@ -2,7 +2,6 @@
 	<figure class="pdm-media-slider-item is-loading"
 			:type="fileType"
 	        ref="figure"
-	        :style="itemStyle"
 	>
 	</figure>
 </template>
@@ -26,7 +25,6 @@
 				placeholder: "",
 				asset: undefined,
 				isLoaded: false,
-				currentTranslation: 0,
 			}
 		},
 		mounted(){
@@ -36,11 +34,6 @@
 			fileType(){
 				return this.checkFileType(this.src)
 			},
-			itemStyle(){
-				return {
-					transition: `transform ${this.duration/1000}s`
-				}
-			}
 		},
 		methods: {
 			loadMedia(){
@@ -57,10 +50,6 @@
 
 				img.src = this.src
 			},
-			slide(distance, direction){
-				this.currentTranslation += distance
-				this.$refs.figure.style.transform = `translateX(${this.currentTranslation}px)`
-			}
 		},
 		watch: {
 

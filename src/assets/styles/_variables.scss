@@ -21,8 +21,9 @@ $item-subtitle-color:  mix($accent-color, white, 50%);
 $item-description-font-weight: normal;
 $item-description-color: #212121;
 
-$alternate-middle-column-width: calc(#{$dot-width} + #{$dot-border-thickness * 2});
-$alternate-side-column-width: calc(50% - #{$alternate-middle-column-width / 2});
+$divider-column-width: calc(#{$dot-width} + #{$dot-border-thickness * 2});
+$alternate-side-column-width: calc(50% - #{$divider-column-width / 2});
+$single-side-column-width: calc(100% - #{$divider-column-width});
 
 $media-size: 8rem;
 $media-nav-width: 2rem;

@@ -1,30 +1,40 @@
 .pdm-media-slider {
   position: relative;
-  padding: 1rem 0;
+  margin: 0;
+  padding: 0;
 }
 
-.pdm-media-slider-inner {
-  display: block;
-  white-space: nowrap;
+.pdm-media-slider-outer {
+  position: relative;
+  padding: 1rem 0;
   overflow: hidden;
 
   &[data-direction="rtl"] {
     direction: rtl;
 
-    > .pdm-media-slider-item {
-      margin: 0;
-      margin-left: 1em;
+    .pdm-media-slider-inner .pdm-media-slider-item {
+      margin-right: 0;
     }
   }
 
   &[data-direction="ltr"] {
     direction: ltr;
 
-    > .pdm-media-slider-item {
-      margin: 0;
-      margin-right: 1em;
+    .pdm-media-slider-inner .pdm-media-slider-item {
+      margin-left: 0;
     }
   }
+}
+
+.pdm-media-slider-inner {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: visible;
+  -webkit-transition: all .5s;
+  -moz-transition: all .5s;
+  -ms-transition: all .5s;
+  -o-transition: all .5s;
+  transition: all .5s;
 }
 
 @mixin by-filetype($type){
@@ -51,6 +61,7 @@
   direction: ltr;
   border-radius: 10%;
   overflow: hidden;
+  margin: .5rem;
 
   &.is-loading::before {
     -webkit-box-sizing: border-box;
